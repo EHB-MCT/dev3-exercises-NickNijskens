@@ -1,54 +1,55 @@
-class Duolingo(val roundSize: Int = 5, val defaultLanguage: String = "Limburgs") {
+class Duolingo {
+    private var wordDeck = WordDeck()
 
+    private var words = mutableSetOf<Word>()
 
-    private val words = mutableSetOf<Word>(
-        LimburgsWord("Hond", "Hoooooooooond"),
-        LimburgsWord("Schoenen", "Sjoöon"),
-        LimburgsWord("Fruitgebak", "Vlaai"),
-        LimburgsWord("Water", "Wooater"),
-        LimburgsWord("Fruitwater", "Jenever"),
-        LimburgsWord("Klaar", "Gereit"),
-        LimburgsWord("Melk", "Mellek"),
-        LimburgsWord("Glijden", "Roetsjen"),
-        LimburgsWord("Zagen", "Zeivere"),
-        LimburgsWord("Mok", "Zjat"),
-        EnglishWord("Hond", "Dog"),
-        EnglishWord("Schoenen", "Shoes"),
-        EnglishWord("Fruitgebak", "Fruit cake"),
-        EnglishWord("Water", "Water"),
-        EnglishWord("Fruitwater", "Fruitwater"),
-        EnglishWord("Klaar", "Done"),
-        EnglishWord("Melk", "Milk"),
-        EnglishWord("Glijden", "Slide"),
-        EnglishWord("Zagen", "Nag"),
-        EnglishWord("Mok", "Mug")
-    )
-
-    public fun play(){
-        val chosenWords = words.filter{it.language == defaultLanguage}.shuffled().take(roundSize).toMutableSet();
-        var iter = 0
-
-        chosenWords.map{
-            println("")
-            print("Vertaal ")
-            print(it.original)
-            print(" naar het ")
-            print(it.language)
-            print(": ")
-            val answer = readLine()
-            if(answer == it.translated){
-                words.remove(Word(it.original, it.translated, it.language));
-            }
-            else {
-                println()
-                print("De juiste vertaling was ")
-                println(it.translated)
-            }
-            println()
-            print("Nog ")
-            print(chosenWords.size - iter - 1)
-            println(" woorden te gaan")
-            iter++
+    constructor(difficulty: String, language: String){
+        if(difficulty == "easy"){
+            words = wordDeck.filterByLanguage(language).filter{it.difficulty < 2}.toMutableSet()
+        }
+        if(difficulty == "difficult"){
+            words = wordDeck.filterByLanguage(language).filter{it.difficulty >= 2}.toMutableSet()
+        }
+        if(difficulty != "easy" && difficulty != "difficult"){
+            throw Exception("Please provide a suitable difficulty")
         }
     }
+    fun play(){
+        val chosenWords = words.shuffled().take(6).toMutableSet()
+        var iter = 0
+        var lives = 2
+
+        chosenWords.forEach(){
+            if(lives > 0){
+                println("")
+                print("Vertaal ")
+                print(it.original)
+                print(" naar het ")
+                print(it.language)
+                print(": ")
+                val answer = readLine()
+                val translation = it.translated
+                if(answer == it.translated){
+                    wordDeck.words.find(){it.translated == translation}?.setDifficulty("right")
+                    chosenWords.remove(Word(it.original, it.translated, it.language, it.difficulty))
+                }
+                else {
+                    println()
+                    wordDeck.words.find(){it.translated == translation}?.setDifficulty("wrong")
+                    print("De juiste vertaling was ")
+                    println(it.translated)
+                    lives--
+
+                }
+                println()
+                print("Nog ")
+                print(chosenWords.size - iter - 1)
+                println(" woorden te gaan")
+                iter++
+            }
+
+        }
+
+    }
+
 }
